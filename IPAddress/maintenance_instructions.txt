@@ -1,0 +1,122 @@
+instructions
+
+These procedures are not difficult if you follow the steps carefully.
+
+
+To update the javadoc
+---------------------
+
+1. Check out into your Eclipse workspace the master branch of the IPAddress Eclipse project in the IPAddress repository which contains this file.
+https://github.com/seancfoley/IPAddress
+
+2. Check out into your Eclipse workspace the master branch of the "Functional Doclet for Javadoc" Eclipse project in the Functional-Doclet-for-Javadoc repository.
+https://github.com/seancfoley/Functional-Doclet-for-Javadoc
+
+3. Run the build.xml ant task to generate the javadoc into the javadoc folder in the IPAddress project
+
+4. In eclipse you switch the IPAddress project to the local gh-pages branch.  Do not commit the javadoc files before doing so.  
+Since those files do not belong to any branch, they will remain in your IPAddress project as you switch branches.
+
+5. Once in gh-pages, you cut and paste the new javadoc files from the uncommitted javadoc folder to the apidocs folder, overwriting the old ones
+
+6. You commit and push the new contents in the apidocs folder.
+
+Done.
+
+
+To update the gh-pages docs
+---------------------------
+
+1. The master file for the docs is the docs.odt file checked into the IPAddress Eclipse project in the IPAddress repository which contains this file.
+You edit that file first.  But that contains only the content, and not the menu and links on the left side.
+
+2. When you are done, you save your changes to the odt file.  Then you save as a filtered html file using MS Word.  
+If you are using some other word processor you would save as html but at the moment the online file was generated from Word.
+
+3. In the gh-pages branch of the IPAddress repository, you edit the file index.html.  
+In some cases I have just been using the github editor which works directly on the github repo and thus no push will be required, just a commit.
+However, if you do it with Eclipse, you can switch to the branch inside Eclipse and then go to the github repo in the filesystem.
+
+4. Inside index.html, there are two sections that can be replaced: the <style> in the html header, and the content inside the <section> tags.
+There are comments that denote the start and end.
+
+5. Optional: Typically you do not need to replace the style, but if so, you simply cut and paste the corresponding <style> from the header in the word html file into the index.html file.
+If you do replace the style, note that I had to delete the "a:visited" and "a:link" strings in that <style> section which were not needed but interfered with the existing styles in the page.
+You do not delete the style settings for them because the setting also applied to some MS Word style class or div.  See the diff for the check-in "adjust link colors"
+
+6. You cut and paste the <div class=WordSection1> section from the word file inside the <section> section in the index.html file
+
+7. You commit the index.html file in the github repository.
+
+8. Save the odt doc as a pdf.  If you open in MS Word and save as pdf, the links go away.   
+However, if you open in Word and save as filtered html (as in step 2), and then you open in chrome as print to pdf, 
+then the links are preserved.  Also, in chrome, when printing uncheck the "headers and footers".
+
+Done.
+
+Note: MS Word can give trouble with the hyperlinks and anchors.  I tried to save as html, edit html yourself, then save as odt again, which helped.
+But even then you cannot create new hyperlink anchors that match the existing, the underlying issue seems to be anchors in new Word inserted in front of heading, while old anchors surrounded heading:
+<a name="x"></a>Bla 
+<a name="x">Bla</a>
+
+Note 2: When you save, it may create a relative link to the images in the git hub repo, like <img src="../../eclipse/github/IPAddress/IPAddress/address.png">
+So you need to change that to just <img src="address.png">.  Or you should create the filtered html doc in the same directory as the original.
+
+
+
+
+To do a release (see build.xml for additional complexities with Java 8 vs 9)
+----------------------
+
+A Branching 
+
+0. If you are doing a major release, in gh-pages branch create a new folder with the old docs and put a link to it from the main page, to preserve them.
+Also link back from the old docs to the new.
+Figure out your branching strategy for the release, if applicable, branch if necessary, and then work off the old or new branch to provide the release.
+If your previous release is based on the master branch,
+you will first want to ensure you create a branch for the previous release before you check your new code into master for the new release.
+
+B Github
+
+1. Edit the release "version" property in build.xml
+
+2. Edit the release property in pom.xml
+
+3. Use build.xml to "create dist jar" and replace the checked-in file IPAddress.jar with the dist jar created.
+NOTE: Currently we have had to separate javadoc creation from the creation of dist jar or maven, see notes in build.xml for the reason.
+
+4. Check in and push the changes.
+
+5. Create the release using the github releases button on the releases page, 
+which allows you to select the branch.
+This creates the tag as well (but does not create a branch).  The tags have the format vx.x.x
+Add the dist jar from (2) to the release.  
+The source code zip and tar files are automatically created by github.
+
+
+C Maven
+
+6. Use build.xml to "sign maven artifacts", which will also run "create maven artifacts" first.  You should see the maven artifacts created.
+
+The signing will create a batch file to do the signing.  Running gpg directly from the Ant JVM seems to result in gpg hanging.  So run the same gpg commands from the command prompt or use the batch file.
+
+7. Complete the signing using batch file or command line.  You should see the signed artifacts created, for each artifact another file is created with the ".asc" extension added to the artifact name.
+
+8. Remove the batch file sign.bat.  Create the bundle bundle.jar using build.xml to "create maven bundle".
+
+9. Follow instructions here for manual deployment:
+http://central.sonatype.org/pages/manual-staging-bundle-creation-and-deployment.html
+which requires that you go here https://oss.sonatype.org/ to upload.
+	
+https://issues.sonatype.org/browse/OSSRH-27241 was the first sonatype issue that was dropped.
+Your original sonatype JIRA issue is https://issues.sonatype.org/browse/OSSRH-28545
+
+Use your sonatype user/pw.
+
+10. Got to maven central repository, https://search.maven.org/, and browse or search for your release.  It will not show up immediately.
+It may take about 10 minutes.
+
+11. Once they are there, use an eclipse maven project to add as a dependency and check it shows up.  You can run some code in a main method as well for further testing.
+
+
+
